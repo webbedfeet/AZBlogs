@@ -1,0 +1,70 @@
+---
+title: "Pivot Data"
+author: "Daniel Schiff"
+date: "`r format(Sys.Date(),'%B %d, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The Importance of Pivot Data
+
+The emergence of `tidyr::pivot_longer` and `tidyr::pivot_wider` have helped retire the `gather` and `spread` functions. 
+The pivot functions allow us to modify data sets. Using `pivot_wider` we can extend data sets to have more columns and less rows. 
+The `pivot_wider` function are squishing vertically and stretching horizontally. 
+While `pivot_longer` we can stretch the dataset vertically and squish it horizontally. 
+Below we will see examples of how these functions work, and why the work better than the predecessors using data sets provided in TidyTuesday.  
+
+## Pivot Longer
+
+What do we notice happens between the original data set and the one once we use `pivot_longer`?
+When the function is used, the amount of observations (rows) increases, and the variables (columns) decreases. 
+In the code, we will observe shrinking the columns of _2016, 2017, 2018_ into two columns, one being the year column with values of 2016, 2017 and 2018. The second column is the energy_consumption used.  
+
+```{r warning=F, message=F}
+#Require the packages needed
+require(tidyverse)
+#Upload the Data
+energy_types <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-08-04/energy_types.csv')
+energy_types %>% tibble()
+#View(energy_types)
+
+dfpl <- energy_types %>%
+  pivot_longer("2016":"2018", names_to = "year", values_to = "energy_consumption")
+dfpl %>% tibble()
+#View(dfpl)
+
+```
+
+
+## Pivot Wider
+
+Now we are going to widen the data set using the reverse of `pivot_longer`, which is `pivot_wider`. 
+Instead of expanding the years back out, we are going to expand out the types of energy consumption. 
+Notice when we do this step, we take out a column of levels using the `select(-4)`. 
+Also notice, that we are taking the column names (observations) from the "type" column and giving them the value from consumption. 
+This allows for the data to be seen in a different way both in a data set, or in visualizations. 
+
+```{r}
+
+dfwl <- dfpl %>%
+  select(-4) %>% #Here we are removing the levels column because it disrupts with the data preparations
+  pivot_wider(names_from = type, values_from = energy_consumption)
+
+dfwl %>% tibble() 
+
+#Now if we wanted to make this more complex we can do the following: I am not sure this is a great example, but it is worth showing.
+dfwl2 <- dfwl %>%
+  pivot_wider(names_from = year, 
+              values_from = c("Conventional thermal", "Nuclear", "Hydro", 
+                              "Pumped hydro power", "Wind", "Solar", "Geothermal", "Other")) 
+
+dfwl2 %>% tibble()
+
+
+
+```
+
+  
