@@ -1,0 +1,160 @@
+---
+title: "gghighlight"
+author: "Daniel Schiff"
+date: "`r format(Sys.Date(),'%B %d, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## gghighlight
+
+When first learning R, I remember talking about using `gghighlight()` to showcase data. I became familiar with `ggplot()` early on in my R programming, and wanted a unique way to showcase outliers or focus areas. This is when someone suggested `gghighlight()` to me.
+
+Throughout this post we will look at how to use gghighlight in different setting and graphs. The graphs we will use are scatter plot, line plot and bar chart.
+
+##### Packages and Data
+
+```{r, warning = FALSE, message = FALSE}
+
+require(tidyverse)
+require(gghighlight)
+
+iris <- iris
+tibble(iris)
+
+output = NA
+set.seed(5)
+for( i in 1:100){
+t <- (sample(0:1, 500, replace = T, prob = c(.7,.3)))
+n <- 1:500
+s <- as.data.frame(cbind(i, t, n))
+s <- mutate(s, f = cumsum(t),
+            p = f/n,
+            i = as.factor(i))
+output <- rbind(s, output) %>%
+  drop_na(i)
+}
+
+tibble(output)
+
+```
+
+
+## Scatter Plot
+
+Notice in the scatter plots below we can see how gghighlight works based on the commands we implement into the code chunk. In the first code chunk we want the color by Species if the `Species == "setosa"`. This is the condition we put into the `gghighlight()` function. 
+
+
+```{r}
+
+g <- ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point() +
+  gghighlight(Species == "setosa", use_direct_label = FALSE) + 
+  labs(title = "Iris", subtitle = "Sepal Width compared to Sepal Length")
+g
+```
+
+Next, we want the colors to be related to the `Species != "setosa"` when species does not equal setosa. This is why in the second graphic we can see the two different colors in relation to the two other species in the iris data set. Using the `keep_scales = TRUE` argument we can notice the legend shows all the colors of the plot, but only those that are conditioned in the `gghighlight()`. 
+
+```{r}
+g1 <- ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) + 
+  geom_point() +
+  gghighlight(Species != "setosa", use_direct_label = FALSE, keep_scales = TRUE) + 
+  labs(title = "Iris", subtitle = "Sepal Width compared to Sepal Length")
+g1
+
+
+```
+
+
+## Line Plot
+
+Line Plots have a lot of unique opportunities within gghighlight. In the first plot we will notice the lines that have a percentage value that does not fall below `.3` . As you can see in the red line we the 16th line is the line that is highlighted. 
+
+```{r}
+l <- ggplot(output, aes(x = n, y = p, color = i, group = i)) + 
+  geom_line() +
+  gghighlight(min(p)>.3) + 
+  labs(title = "Plotting Average as Sample Size Increase", x = "Number of Sample", y = "Percentage",
+       color = "Line ID") + 
+  theme_classic()
+l
+```
+
+As we dive deeper into line plots we can make changes to make the plots unique. In the second plot we will notice that there are five line highlighted. we do this by adding `max_highlight = 5L`. We do it for the highest frequency count of the sampling. We also have `use_direct_label = FALSE`, which hides the label that is shown in the above graph, and moves to the guide/legend. We also implement `unhighlighted_params = list(size = .5, color = NULL, alpha = .3))`. This argument changes thickness of line, color of hidden lines and the transparency of those lines. 
+
+
+```{r}
+
+l1 <- ggplot(output, aes(x = n, y = p)) + 
+  geom_line(aes(color = i), size = 1.25) +
+  gghighlight(max(f), max_highlight = 5L, use_direct_label = FALSE, 
+              unhighlighted_params = list(size = 1, color = NULL, alpha = .3)) +
+  labs(title = "Plotting Average as Sample Size Increase", x = "Number of Sample", y = "Percentage",
+       color = "Line ID") + 
+  theme_classic()
+l1
+
+```
+
+One fascinating thing, not to be confused with faceting, is we can make really cool examples with `facet_wrap()`. What `facet_wrap()` does is provide subplots based on variable differences. Here we want to see four different lines to wrap. When using `gghighlight()` it will already filter the facet wrap to the lines selected.  
+
+```{r}
+
+l2 <- ggplot(output, aes(x = n, y = p)) + 
+  geom_line(aes(color = i), size = 1.1) + 
+  gghighlight(i == c(1, 25, 50, 75), use_direct_label = F, 
+              unhighlighted_params = list(size = .5, color = NULL, alpha = .3)) +
+  labs(title = "Plotting Average as Sample Size Increase", x = "Number of Sample", y = "Percentage",
+       color = "Line ID") + 
+  theme_classic() + 
+  facet_wrap(~i)
+l2
+
+```
+
+## Histogram Chart
+
+With histogram and bar charts, we can do some really exciting visuals. In the first plot we want to see the groupings that have samples larger than 1 standard deviation from the mean. As we see in the chart below we can see the highlighted values for the Totals that are outside of 1 standard deviation of the mean. 
+
+```{r}
+output2 <-  output %>%
+  filter(n == 500) %>%
+  mutate(i = as.numeric(i),
+         ID_Group = case_when(i <= 25 ~ "Group 1 (1-25)",
+                              i > 25 & i <= 50 ~ "Group 2 (26-50)",
+                              i > 50 & i <= 75 ~ "Group 3 (51-75)",
+                              i > 75 ~ "Group 4 (76-100)"))
+
+
+h <- ggplot(output2, aes(x = f)) + 
+  geom_histogram(bins = 9, aes(fill = ID_Group)) + 
+  gghighlight(f >= mean(f) + sd(f) | f <= mean(f) - sd(f), use_direct_label = FALSE) +
+  labs(title = "Histogram of Total", 
+       subtitle = "From Simulation",
+       x = "Total",
+       y = "Frequency",
+       fill = "Grouping of i")
+h
+```
+
+
+We can also do this for other analysis. Such as seeing if there are any statistical outliers within a histogram. Notice how the condition is formatted to achieve the result of the graph. We take the Inter-Quartile-Range (`IQR()`) * 1.5 of the the final amount of each sample, then from there we take the end of Q3. This gives us the opportunity to say we do have a statistical outlier compared to the data. 
+
+```{r}
+
+h1 <- ggplot(output2, aes(x = f)) + 
+  geom_histogram(bins = 9, aes(fill = ID_Group)) + 
+  gghighlight(f >= ((1.5 * IQR(f)) + quantile(output2$f, probs = .75)), use_direct_label = FALSE) +
+  labs(title = "Histogram of Total", 
+       subtitle = "From Simulation",
+       x = "Total",
+       y = "Frequency",
+       fill = "Grouping of i")
+h1
+
+```
+
