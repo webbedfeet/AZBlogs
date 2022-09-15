@@ -1,0 +1,226 @@
+---
+title: "R2RTF"
+author: "Daniel Schiff"
+date: "9/19/2022"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Introduction to R2RTF
+
+In our climate as in industry, we have seen a push of incorporating R within Clinical Data. One of the packages that I find myself using is `r2rtf`. `r2rtf` is an R package that translates data frames into RTF files, to create tables and figures. The package focuses on creating the table format. So using other tools like `tidyverse` to do the data manipulation, we then can create the table using `r2rtf`.
+
+
+
+## Install Packages
+
+To get started we will install the packages talked about above. the `r2rtf` package will focus on the formatting, while `tidyverse` we help us with the data manipulation and cleaning. 
+
+
+```{r, warning = FALSE, message = FALSE}
+
+library(r2rtf)
+library(unrtf)
+
+library(tidyverse)
+
+```
+
+## Upload Data and The Basic Idea
+
+In the `r2rtf` package we find a data set `?r2rtf_adae`. This data set is a mock ADAM Adverse Events (AE) data set that we will use to showcase the package. 
+
+We will rename the data set to ADAE, for an easier understanding of what this would look if we did this for a clinical data analysis internally.
+
+In the three table printed below, we look at how we can print a table. 
+
+Table 1 (tbl.rtf): The basic code, using `rtf_body()` and `rtf_encode()`.
+
+Table 2 (tbl1.rtf): Adjusting the basic code, changing the width of columns and the name of the columns. Using `rtf_colheader()` which we can also pair with `col_rel_width =` can help layout the column with text, and with width.
+
+Table 3 (tbl2.rtf): Adding a Column Header to the Column Header. Adding the `rtf_colheader()` to the code allows us to showcase another layout option.
+
+```{r}
+#?r2rtf_adae
+
+tibble(r2rtf_adae)
+
+adae <- r2rtf_adae %>%
+  select(USUBJID, TRTA, AEDECOD, AEBODSYS)
+
+tbl1 <- adae %>%
+  count(TRTA, AEDECOD) %>%
+  pivot_wider(names_from = TRTA, values_from = n, values_fill = 0)
+
+head(tbl1, 50) %>%
+  rtf_body() %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl.pdf")
+```
+
+```{r}
+
+head(tbl1, 50) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                col_rel_width = c(4, 1, 1, 1)) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1)) %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl1.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl1.pdf")
+```
+
+```{r}
+
+head(tbl1, 5) %>%
+  rtf_colheader(colheader = " | Treatment", 
+                col_rel_width = c(4, 3)) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                col_rel_width = c(4, 1, 1, 1)) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1)) %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl2.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl3.pdf")
+```
+
+
+## Text Alignment and Text Style 
+
+In this section we will manipulate with the text. With `r2rtf`, the package gives us the ability to change the alignment, style, font, size, color, and so much more. In the example below you can see how the alignment changes using `text_justification =`. Change the format of the text using `text_format =`, in the example we bold some text. We also have he ability to italics, underline, strike, superscript and subscript. Using `text_font_size =` to change the size and `text_color =` to change the color. 
+
+```{r}
+
+head(tbl1, 5) %>%
+  rtf_colheader(colheader = " | Treatment", 
+                col_rel_width = c(4, 3),
+                text_justification = c("c", "c"), 
+                text_format = c("", "b"),
+                text_font_size = 16) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                col_rel_width = c(4, 1, 1, 1),
+                text_format = c("b", "b", "b", "b"),
+                text_color = c("black", "red", "blue", "green")) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1), 
+           text_justification = c("l", "c", "c", "c"),
+           text_format = c("b", "", "", "")) %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl3.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl3.pdf")
+```
+
+
+## Table Border, Title and Footnote
+
+Table 5 (tbl4.rtf): In Table 5, I add a line around the column header. We also can do it between lines with the dashes. Using the argument `border_bottom = ` and `border_top = `.
+
+Table 6 (tbl5.rtf): In Table 6, I add the title and a subtitle to the table. 
+
+Table 7 (tbl6.rtf): In Table 7, I add a footnote to the table. 
+ 
+
+```{r}
+
+head(tbl1, 5) %>%
+  rtf_colheader(colheader = " | Treatment", 
+                col_rel_width = c(4, 3),
+                text_justification = c("c", "c"), 
+                text_format = c("", "b"),
+                text_font_size = 16) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                border_top = c("", "single", "single", "single"),
+                col_rel_width = c(4, 1, 1, 1),
+                text_format = c("b", "b", "b", "b"),
+                text_font_size = c(16, 10, 10, 10),
+                text_color = c("black", "red", "blue", "green")) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1), 
+           text_justification = c("l", "c", "c", "c"),
+           text_format = c("b", "", "", ""),
+           border_bottom = "dash") %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl4.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl4.pdf")
+```
+
+```{r}
+
+head(tbl1, 10) %>%
+  rtf_title(title = c("Table 1.1.1.1 Adverse Event Count by Treatment Group", 
+                      "(An example)"),
+            text_format = c("b", "i")) %>%
+  rtf_colheader(colheader = " | Treatment", 
+                col_rel_width = c(4, 3),
+                text_justification = c("c", "c"), 
+                text_format = c("", "b"),
+                text_font_size = 16) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                border_top = c("", "single", "single", "single"),
+                col_rel_width = c(4, 1, 1, 1),
+                text_format = c("b", "b", "b", "b"),
+                text_font_size = c(16, 10, 10, 10)) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1), 
+           text_justification = c("l", "c", "c", "c"),
+           text_format = c("b", "", "", "")) %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl5.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl5.pdf")
+```
+
+```{r}
+
+head(tbl1, 10) %>%
+  rtf_title(title = c("Table 1.1.1.1 Adverse Event Count by Treatment Group", 
+                      "(An example)"),
+            text_format = c("b", "i")) %>%
+  rtf_colheader(colheader = " | Treatment", 
+                col_rel_width = c(4, 3),
+                text_justification = c("c", "c"), 
+                text_format = c("", "b"),
+                text_font_size = 16) %>%
+  rtf_colheader("Adverse Events | Placebo | Xanomeline High Dose | Xanomeline Low Dose",
+                border_top = c("", "single", "single", "single"),
+                col_rel_width = c(4, 1, 1, 1),
+                text_format = c("b", "b", "b", "b"),
+                text_font_size = c(16, 10, 10, 10)) %>%
+  rtf_body(col_rel_width = c(4, 1, 1, 1), 
+           text_justification = c("l", "c", "c", "c"),
+           text_format = c("b", "", "", "")) %>%
+  rtf_footnote("Adverse Event are coded according to MedDRA version xx.xx") %>%
+  rtf_encode() %>%
+  write_rtf("rtf/tbl6.rtf")
+
+```
+
+```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
+knitr::include_graphics("pdf/tbl6.pdf")
+```
+
