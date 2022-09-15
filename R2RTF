@@ -14,13 +14,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #Introduction to R2RTF
 
-In our climate as in industry, we have seen a push of incorporating R within Clinical Data. One of the packages that I find myself using is `r2rtf`. `r2rtf` is an R package that translates data frames into RTF files, to create tables and figures. The package focuses on creating the table format. So using other tools like `tidyverse` to do the data manipulation, we then can create the table using `r2rtf`.
+In our work environment as in industry, we have seen a push of incorporating R within Clinical Data. One of the packages that I find myself using is `r2rtf`. `r2rtf` is an R package that translates data frames into RTF files, to create tables and figures. The package focuses on creating the table format.
 
 
 
 ## Install Packages
 
-To get started we will install the packages talked about above. the `r2rtf` package will focus on the formatting, while `tidyverse` we help us with the data manipulation and cleaning. 
+To get started we will install the packages talked about above. the `r2rtf` package. This package focuses on the formatting, while `tidyverse` will help us with the data manipulation and cleaning. 
 
 
 ```{r, warning = FALSE, message = FALSE}
@@ -41,10 +41,6 @@ We will rename the data set to ADAE, for an easier understanding of what this wo
 In the three table printed below, we look at how we can print a table. 
 
 Table 1 (tbl.rtf): The basic code, using `rtf_body()` and `rtf_encode()`.
-
-Table 2 (tbl1.rtf): Adjusting the basic code, changing the width of columns and the name of the columns. Using `rtf_colheader()` which we can also pair with `col_rel_width =` can help layout the column with text, and with width.
-
-Table 3 (tbl2.rtf): Adding a Column Header to the Column Header. Adding the `rtf_colheader()` to the code allows us to showcase another layout option.
 
 ```{r}
 #?r2rtf_adae
@@ -69,6 +65,8 @@ head(tbl1, 50) %>%
 knitr::include_graphics("pdf/tbl.pdf")
 ```
 
+Table 2 (tbl1.rtf): Adjusting the basic code, changing the width of columns and the name of the columns. Using `rtf_colheader()` which we can also pair with `col_rel_width =` can help layout the column with text, and with width.
+
 ```{r}
 
 head(tbl1, 50) %>%
@@ -83,6 +81,9 @@ head(tbl1, 50) %>%
 ```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
 knitr::include_graphics("pdf/tbl1.pdf")
 ```
+
+Table 3 (tbl2.rtf): Adding a Column Header to the Column Header. Adding the `rtf_colheader()` to the code allows us to showcase another layout option.
+
 
 ```{r}
 
@@ -134,10 +135,6 @@ knitr::include_graphics("pdf/tbl3.pdf")
 ## Table Border, Title and Footnote
 
 Table 5 (tbl4.rtf): In Table 5, I add a line around the column header. We also can do it between lines with the dashes. Using the argument `border_bottom = ` and `border_top = `.
-
-Table 6 (tbl5.rtf): In Table 6, I add the title and a subtitle to the table. 
-
-Table 7 (tbl6.rtf): In Table 7, I add a footnote to the table. 
  
 
 ```{r}
@@ -167,6 +164,8 @@ head(tbl1, 5) %>%
 knitr::include_graphics("pdf/tbl4.pdf")
 ```
 
+Table 6 (tbl5.rtf): In Table 6, I add the title and a subtitle to the table. 
+
 ```{r}
 
 head(tbl1, 10) %>%
@@ -194,6 +193,8 @@ head(tbl1, 10) %>%
 ```{r, out.width = "100%", out.height = "400px", echo = FALSE, fig.align = "center"}
 knitr::include_graphics("pdf/tbl5.pdf")
 ```
+
+Table 7 (tbl6.rtf): In Table 7, I add a footnote to the table. 
 
 ```{r}
 
